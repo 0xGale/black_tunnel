@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+
 #include "tunnel_server.h"
 #include "session.h"
 
@@ -37,27 +38,40 @@ int init_server(uint16_t port) {
 }
 
 
+int buffer_parser(int sockfd, uint8_t *buffer, uint32_t length, struct sockaddr_in *addr) {
+
+}
+
 void *handle_request(void *arg) {
     int client_fd = *(int *)arg;
 
     struct sockaddr_in addr;
     socklen_t len = sizeof(struct sockaddr_in);
+    char buf[BUF_LEN] = {0};
+    int n;
 
     while (1) {
-        char buf[BUF_LEN] = {0};
-        int n = recvfrom(client_fd, buf, BUF_LEN, MSG_WAITALL, (struct sockaddr*)&addr, &len);
+        n = recvfrom(client_fd, buf, BUF_LEN, MSG_WAITALL, (struct sockaddr*)&addr, &len);
         if (n == 0) {
-            printf("client disconnect: %d\n", client_fd);
+            printf("client closed: %d\n", client_fd);
             close(client_fd);
             break;
+        } else if (n > 0) {
+            // buf[n] = 0x0;
+            char addr_buf[INET_ADDRSTRLEN];
+            get_addr_string(addr, addr_buf);
+            printf("client ip addr: %s:%d\n", addr_buf, ntohs(addr.sin_port));;
+
+            // snprintf(buf, sizeof(buf), "client IP: %s:%d\n", addr_buf, ntohs(addr.sin_port));
+
+            // int ret = buffer_parser(client_fd, buf, n, &addr);
+            // TODO 失败就跳过
+
+
+            // TODO sendto
+            
         }
 
-        char addr_buf[INET_ADDRSTRLEN];
-        get_addr_string(addr, addr_buf);
-        printf("client ip addr: %s:%d\n", addr_buf, ntohs(addr.sin_port));
-
-        snprintf(buf, sizeof(buf), "client IP: %s:%d\n", addr_buf, ntohs(addr.sin_port));
-        // strncpy(buf, addr_buf, INET_ADDRSTRLEN);
 
         n = sendto(client_fd, buf, sizeof(buf), 0, (struct sockaddr*)&addr, len);
 
@@ -75,4 +89,8 @@ int main() {
         pthread_t thid;
         pthread_create(&thid, NULL, handle_request, &sock_fd);
     }
+
+    // pthread_
+
+    // pthread_join(thid, NULL);
 }
