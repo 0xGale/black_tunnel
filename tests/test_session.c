@@ -10,6 +10,6 @@ void main() {
     addr.sin_port = htons(2000);
     inet_aton("192.168.0.255", &addr.sin_addr);
     
-    get_addr_string(addr, buf);
+    get_addr_string(&addr, buf);
     printf("%s\n", buf);
 }
